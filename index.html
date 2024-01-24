@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    
+    <style>
+        #chart_div {
+            width: 100%; /* 차트의 너비를 화면 너비에 맞춤 */
+            height: 500px; /* 차트의 높이를 설정 */
+        }
+    </style>
+    
+    
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+
+        google.charts.setOnLoadCallback(drawChart);
+        fetch('Tesal_2014-2017.json')
+            .then(response => response.json()) // 응답을 JSON으로 변환
+            .then(data => {
+                // 여기서 data는 JavaScript 객체(배열)입니다
+                console.log(data);
+            })
+            .catch(error => console.error('Error:', error));
+
+        function drawChart() {
+            fetch('Tesal_2014-2017.json')
+                .then(response => response.json())
+                .then(jsonData => {
+                    // // JSON 데이터에서 1월에 해당하는 데이터만 필터링
+                    // var filteredData = jsonData.filter(item => {
+                    //     var date = new Date(item.Date);
+                    //     return (date.getMonth() === 0) && (date.getFullYear() === 2014); // JavaScript에서 월은 0부터 시작하므로, 1월은 0입니다.
+                    // });
+
+                    // 필터링된 데이터에서 필요한 필드 추출
+                    var formattedData = jsonData.map(item => {
+                        // 주가가 없는 날은 데이터에서 제외
+                        if (item.Low !== null && item.Open !== null && item.Close !== null && item.High !== null) {
+                            return [
+                                new Date(item.Date),
+                                item.Low,
+                                item.Open,
+                                item.Close,
+                                item.High
+                            ];
+                        }
+                    }).filter(Boolean);
+
+                    console.log(formattedData)
+
+                    // 첫 번째 행에 열 이름 추가
+                    // formattedData.unshift(['Date', 'Low', 'Open', 'Close', 'High']);
+
+                    var data = google.visualization.arrayToDataTable(formattedData, true);
+
+                    var options = {
+                        legend: 'none',
+                        explorer: { 
+                            axis: 'horizontal', // 수평 스크롤만 활성화
+                            keepInBounds: true, // 차트의 경계 내에서만 확대/축소
+                            maxZoomIn: .01 // 최대 확대 정도 제한
+                        },
+                        hAxis: {
+                            format: 'M/d/yy'
+                        }
+                    };
+
+                    var chart = new google.visualization.CandlestickChart(document.getElementById('chart_div'));
+                    chart.draw(data, options);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+</head>
+<body>
+    <div id="chart_div" style="width: 1500px; height: 1000px;"></div>
+</body>
+</html>
